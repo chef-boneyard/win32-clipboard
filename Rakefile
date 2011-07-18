@@ -1,25 +1,31 @@
 require 'rake'
+require 'rake/clean'
 require 'rake/testtask'
 
-desc "Install the win32-clipboard library (non-gem)"
-task :install do
-   dest = File.join(Config::CONFIG['sitelibdir'], 'win32')
-   Dir.mkdir(dest) unless File.exists? dest
-   cp 'lib/win32/clipboard.rb', dest, :verbose => true
-end
+CLEAN.include('**/*.gem', '**/*.rbc')
 
-desc "Install the win32-clipboard library as a gem"
-task :install_gem do
-   ruby 'win32-clipboard.gemspec'
-   file = Dir["*.gem"].first
-   sh "gem install #{file}"
+namespace :gem do
+  desc "Create the win32-clipboard gem"
+  task :create => [:clean] do
+    spec = eval(IO.read('win32-clipboard.gemspec'))
+    Gem::Builder.new(spec).build
+  end
+
+  desc "Install the win32-clipboard library"
+  task :install => [:create] do
+    file = Dir["*.gem"].first
+    sh "gem install #{file}"
+  end
 end
 
 desc "Run the example program"
 task :example do
-   sh "ruby -Ilib examples/clipboard_test.rb"end
+  sh "ruby -Ilib examples/clipboard_test.rb"
+end
 
 Rake::TestTask.new do |t|
-   t.warning = true
-   t.verbose = true
+  t.warning = true
+  t.verbose = true
 end
+
+task :default => :test
