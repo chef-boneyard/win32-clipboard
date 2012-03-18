@@ -1,4 +1,4 @@
-# encoding: utf-8 
+# encoding: utf-8
 ###########################################################################
 # test_clipboard.rb
 #
@@ -15,14 +15,14 @@ require 'win32/clipboard'
 require 'test/unit'
 include Win32
 
-class TC_Win32_ClipBoard < Test::Unit::TestCase  
+class TC_Win32_ClipBoard < Test::Unit::TestCase
   def test_version
     assert_equal('0.6.0', Clipboard::VERSION)
   end
 
   def test_data
     assert_respond_to(Clipboard, :data)
-    assert_nothing_raised{ Clipboard.data }     
+    assert_nothing_raised{ Clipboard.data }
     assert_kind_of(String, Clipboard.data)
   end
 
@@ -101,7 +101,7 @@ class TC_Win32_ClipBoard < Test::Unit::TestCase
   end
 
   def test_formats_expected_errors
-    assert_raise(ArgumentError){ Clipboard.formats(true) }      
+    assert_raise(ArgumentError){ Clipboard.formats(true) }
   end
 
   def test_format_available
@@ -132,5 +132,5 @@ class TC_Win32_ClipBoard < Test::Unit::TestCase
     assert_not_nil(Clipboard::DIB)
     assert_not_nil(Clipboard::HDROP)
     assert_not_nil(Clipboard::ENHMETAFILE)
-  end 
+  end
 end
