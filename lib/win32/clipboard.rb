@@ -120,6 +120,13 @@ module Win32
             when TEXT, OEMTEXT, UNICODETEXT
               clip_data = 0.chr * GlobalSize(handle)
               memcpy(clip_data, handle, clip_data.size)
+
+              if RUBY_VERSION.to_f >= 1.9
+                unless clip_data.ascii_only?
+                  clip_data.force_encoding('BINARY')
+                end
+              end
+
               clip_data = clip_data[ /^[^\0]*/ ]
             when HDROP
               clip_data = get_file_list(handle)
