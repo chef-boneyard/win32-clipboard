@@ -303,7 +303,7 @@ module Win32
         rv
       end
 
-      old_wnd_proc = SetWindowLongPtr(handle, GWL_WNDPROC, wnd_proc.address)
+      SetWindowLongPtr(handle, GWL_WNDPROC, wnd_proc.address)
       next_viewer  = SetClipboardViewer(handle)
 
       SetWindowLongPtr(handle, GWL_USERDATA, next_viewer)
@@ -357,7 +357,6 @@ module Win32
 
         memcpy(bmi, address, bmi.length)
 
-        size        = bmi[0,4].unpack('L').first  # biSize
         bit_count   = bmi[14,2].unpack('S').first # biBitCount
         compression = bmi[16,4].unpack('L').first # biCompression
         size_image  = bmi[20,4].unpack('L').first # biSizeImage
