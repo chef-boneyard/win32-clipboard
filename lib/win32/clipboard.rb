@@ -1,95 +1,152 @@
-require 'windows/clipboard'
-require 'windows/memory'
-require 'windows/error'
-require 'windows/shell'
-require 'windows/library'
-require 'windows/window'
-require 'windows/msvcrt/buffer'
-require 'windows/gdi/metafile'
-require 'windows/window/message'
-require 'windows/window/classes'
+require 'ffi'
 
 # The Win32 module serves as a namespace only.
 module Win32
+
   # The Clipboard class encapsulates functions that relate to the MS Windows
   # clipboard.
   class Clipboard
-    # The Clipboard::Error class is raised if any of the Win32::Clipboard
-    # methods should fail.
-    class Error < StandardError; end
+    extend FFI::Library
 
-    include Windows::Clipboard
-    include Windows::Memory
-    include Windows::Error
-    include Windows::Window::Classes
-    include Windows::Window::Message
+    private
 
-    extend Windows::Clipboard
-    extend Windows::Memory
-    extend Windows::Error
-    extend Windows::Shell
-    extend Windows::Library
-    extend Windows::Window
-    extend Windows::MSVCRT::Buffer
-    extend Windows::GDI::MetaFile
-    extend Windows::Window::Message
-    extend Windows::Window::Classes
+    typedef :ulong, :hglobal
+    typedef :ulong, :hwnd
+    typedef :ulong, :handle
+
+    ffi_lib FFI::Library::LIBC
+
+    attach_function :memcpy, [:pointer, :string, :size_t], :pointer
+
+    ffi_lib :kernel32
+
+    attach_function :GlobalAlloc, [:uint, :size_t], :hglobal
+    attach_function :GlobalFree, [:hglobal], :hglobal
+    attach_function :GlobalLock, [:hglobal], :pointer
+    attach_function :GetLastError, [], :ulong
+
+    ffi_lib :user32
+
+    attach_function :CloseClipboard, [], :bool
+    attach_function :CountClipboardFormats, [], :int
+    attach_function :EmptyClipboard, [], :bool
+    attach_function :EnumClipboardFormats, [:uint], :uint
+    attach_function :GetClipboardFormatNameA, [:uint, :buffer_out, :int], :int
+    attach_function :IsClipboardFormatAvailable, [:uint], :bool
+    attach_function :OpenClipboard, [:hwnd], :bool
+    attach_function :SetClipboardData, [:uint, :handle], :handle
+
+    public
 
     # The version of this library
-    VERSION = '0.6.0'
+    VERSION = '0.7.0'
 
     # Clipboard formats
 
     # Text
-    TEXT = CF_TEXT
-    OEMTEXT = CF_OEMTEXT
-    UNICODETEXT = CF_UNICODETEXT
+    TEXT = 1
+    OEMTEXT = 7
+    UNICODETEXT = 13
 
     # Images
-    DIB = CF_DIB
-    BITMAP = CF_BITMAP
+    DIB = 8
+    BITMAP = 2
 
     # Metafiles
-    ENHMETAFILE = CF_ENHMETAFILE
+    ENHMETAFILE = 14
 
     # Files
-    HDROP = CF_HDROP
+    HDROP = 15
 
-    # Sets the clipboard contents to the data that you specify. You may
-    # optionally specify a clipboard format. The default is Clipboard::TEXT.
+    GHND = 0x0042
+
+    def initialize
+      unless OpenClipboard(0)
+        raise SystemCallError, GetLastError(), "OpenClipboard"
+      end
+
+      if block_given?
+        begin
+          yield self
+        ensure
+          close
+        end
+      end
+    end
+
+    def close
+      unless CloseClipboard()
+        raise SystemCallError, GetLastError(), "CloseClipboard"
+      end
+    end
+
+    def empty
+      unless EmptyClipboard()
+        raise SystemCallError, GetLastError(), "EmptyClipboard"
+      end
+    end
+
+    alias clear empty
+
+    def num_formats
+      val = CountClipboardFormats()
+
+      if val == 0
+        raise SystemCallError, GetLastError(), "CountClipboardFormats"
+      end
+
+      val
+    end
+
+    # Returns whether or not +format+ (an integer) is currently available.
     #
-    # Example:
-    #
-    #    # Put the string 'hello' on the clipboard
-    #    Win32::Clipboard.set_data('hello')
-    #
-    def self.set_data(clip_data, format = TEXT)
-      self.open
-      EmptyClipboard()
+    def format_available?(format)
+      IsClipboardFormatAvailable(format)
+    end
+
+    def set_data(clip_data, format = TEXT)
+      clear
 
       # NULL terminate text
       case format
         when TEXT, OEMTEXT, UNICODETEXT
-          clip_data << "\0"
+          clip_data # << "\0"
       end
 
       # Global Allocate a movable piece of memory.
       hmem = GlobalAlloc(GHND, clip_data.length + 4)
       mem  = GlobalLock(hmem)
+
       memcpy(mem, clip_data, clip_data.length)
 
       # Set the new data
       begin
         if SetClipboardData(format, hmem) == 0
-          raise Error, "SetClipboardData() failed: " + get_last_error
+          raise SystemCallError, GetLastError(), "SetClipboardData"
         end
       ensure
         GlobalFree(hmem)
-        self.close
       end
-
-      self
     end
+
+    def formats
+      hash = {}
+      cnum = 0
+
+      format = EnumClipboardFormats(cnum)
+
+      #while (format = EnumClipboardFormats(format)) != 0
+        #format = EnumClipboardFormats(format)
+        #p format
+        #buf = 0.chr * 80
+        #GetClipboardFormatNameA(format, buf, buf.length)
+        #hash[format] = buf.split(0.chr).first
+      #end
+
+      hash
+    end
+
+=begin
 
     # Returns the data currently in the clipboard. If +format+ is
     # specified, it will attempt to retrieve the data in that format. The
@@ -145,48 +202,6 @@ module Win32
       end
 
       clip_data
-    end
-
-    # Empties the contents of the clipboard.
-    #
-    def self.empty
-      begin
-        self.open
-        EmptyClipboard()
-      ensure
-        self.close
-      end
-
-      self
-    end
-
-    # Singleton aliases
-    #
-    class << self
-      alias :get_data :data
-      alias :clear :empty
-    end
-
-    # Returns the number of different data formats currently on the
-    # clipboard.
-    #
-    def self.num_formats
-      count = 0
-
-      begin
-        self.open
-        count = CountClipboardFormats()
-      ensure
-        self.close
-      end
-
-      count
-    end
-
-    # Returns whether or not +format+ (an int) is currently available.
-    #
-    def self.format_available?(format)
-      IsClipboardFormatAvailable(format)
     end
 
     # Returns the corresponding name for the given +format_num+, or nil
@@ -414,5 +429,11 @@ module Win32
 
       array
     end
+=end
   end
 end
+
+c = Win32::Clipboard.new
+p c.num_formats
+p c.num_formats
+c.close
