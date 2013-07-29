@@ -26,7 +26,7 @@ module Windows
     attach_function :EmptyClipboard, [], :bool
     attach_function :EnumClipboardFormats, [:uint], :uint
     attach_function :GetClipboardData, [:uint], :handle
-    attach_function :GetClipboardFormatNameA, [:uint, :buffer_out, :int], :int
+    attach_function :GetClipboardFormatNameA, [:uint, :pointer, :int], :int
     attach_function :IsClipboardFormatAvailable, [:uint], :bool
     attach_function :OpenClipboard, [:hwnd], :bool
     attach_function :SetClipboardData, [:uint, :handle], :handle

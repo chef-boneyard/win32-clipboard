@@ -32,18 +32,6 @@ module Win32
 
     GHND = 0x0042
 
-    def self.open
-      unless OpenClipboard(0)
-        raise SystemCallError.new('OpenClipboard', FFI.errno)
-      end
-    end
-
-    def self.close
-      unless CloseClipboard()
-        raise SystemCallError.new('CloseClipboard', FFI.errno)
-      end
-    end
-
     def self.empty
       begin
         open
@@ -138,23 +126,24 @@ module Win32
         close
       end
     end
-=begin
 
-    def formats
-      hash = {}
-      cnum = 0
+    def self.formats
+      formats = {}
+      format = 0
 
-      format = EnumClipboardFormats(cnum)
+      begin
+        self.open
+        while 0 != (format = EnumClipboardFormats(format))
+          buf = FFI::MemoryPointer.new(:char, 80)
+          GetClipboardFormatNameA(format, buf, buf.size)
+          string = buf.read_string
+          formats[format] = string.empty? ? nil : string
+        end
+      ensure
+        self.close
+      end
 
-      #while (format = EnumClipboardFormats(format)) != 0
-        #format = EnumClipboardFormats(format)
-        #p format
-        #buf = 0.chr * 80
-        #GetClipboardFormatNameA(format, buf, buf.length)
-        #hash[format] = buf.split(0.chr).first
-      #end
-
-      hash
+      formats
     end
 
 =begin
@@ -344,6 +333,7 @@ module Win32
         sleep 0.1
       end
     end
+=end
 
     private
 
@@ -351,17 +341,20 @@ module Win32
     # the clipboard content until it is closed.
     #
     def self.open
-      if 0 == OpenClipboard(nil)
-        raise Error, "OpenClipboard() failed: " + get_last_error
+      unless OpenClipboard(0)
+        raise SystemCallError.new('OpenClipboard', FFI.errno)
       end
     end
 
     # Close the clipboard
     #
     def self.close
-      CloseClipboard()
+      unless CloseClipboard()
+        raise SystemCallError.new('CloseClipboard', FFI.errno)
+      end
     end
 
+=begin
     # Get data for enhanced metadata files
     #
     def self.get_metafile_data(handle)
@@ -445,5 +438,5 @@ module Win32
 end
 
 if $0 == __FILE__
-  p Win32::Clipboard.data
+  p Win32::Clipboard.formats
 end
