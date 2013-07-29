@@ -1,4 +1,5 @@
 require File.join(File.dirname(__FILE__), 'windows', 'constants')
+require File.join(File.dirname(__FILE__), 'windows', 'structs')
 require File.join(File.dirname(__FILE__), 'windows', 'functions')
 
 # The Win32 module serves as a namespace only.
@@ -8,9 +9,12 @@ module Win32
   # clipboard.
   class Clipboard
 
-    include Windows::Functions
     include Windows::Constants
+    include Windows::Structs
+    include Windows::Functions
+
     extend Windows::Functions
+    extend Windows::Structs
 
     # The version of this library
     VERSION = '0.7.0'
@@ -102,8 +106,8 @@ module Win32
               end
             when HDROP
               clip_data = get_file_list(handle)
-            #when ENHMETAFILE
-            #  clip_data = get_metafile_data(handle)
+            when ENHMETAFILE
+              clip_data = get_metafile_data(handle)
             #when DIB, BITMAP
             #  clip_data = get_image_data(handle)
             else
@@ -308,37 +312,30 @@ module Win32
       end
     end
 
-=begin
     # Get data for enhanced metadata files
     #
     def self.get_metafile_data(handle)
       buf_size = GetEnhMetaFileBits(handle, 0, nil)
-      buf = 0.chr * buf_size
-      GetEnhMetaFileBits(handle, buf_size, buf)
-      buf
+      buf = FFI::MemoryPointer.new(:char, buf_size)
+      GetEnhMetaFileBits(handle, buf.size, buf)
+      buf.read_string
     end
 
     # Get data for bitmap files
+    #--
+    # TODO: FINISH
     #
     def self.get_image_data(handle)
-      buf = nil
-      bmi = 0.chr * 44 # BITMAPINFO
+      bmi = BITMAPINFO.new
 
       begin
         address  = GlobalLock(handle)
         buf_size = GlobalSize(handle)
 
-        memcpy(bmi, address, bmi.length)
-
-        bit_count   = bmi[14,2].unpack('S').first # biBitCount
-        compression = bmi[16,4].unpack('L').first # biCompression
-        size_image  = bmi[20,4].unpack('L').first # biSizeImage
-        clr_used    = bmi[32,4].unpack('L').first # biClrUsed
-
-        size_image = buf_size + 16 if size_image == 0
+        bmi.address = address
 
         # Calculate the header size
-        case bit_count
+        case bmi[:biBitCount]
           when 1
             table_size = 2
           when 4
@@ -346,19 +343,20 @@ module Win32
           when 8
             table_size = 256
           when 16, 32
-            if compression == 0
-              table_size = clr_used
+            if bmi[:biCompression] == 0
+              table_size = bmi[:biClrUsed]
             elsif compression == 3
               table_size = 3
             else
-              raise Error, "invalid bit/compression combination"
+              raise "invalid bit/compression combination"
             end
           when 24
-            table_size = clr_used
+            table_size = bmi[:biClrUsed]
           else
-            raise Error, "invalid bit count"
+            raise "invalid bit count"
         end # case
 
+        # TODO: Document what's happening here.
         offset = 0x36 + (table_size * 4)
         buf = 0.chr * buf_size
 
@@ -371,7 +369,6 @@ module Win32
 
       buf
     end
-=end
 
     # Get and return an array of file names that have been copied.
     #

@@ -36,6 +36,10 @@ module Windows
     ffi_lib :shell32
 
     attach_function :DragQueryFileA, [:hdrop, :uint, :pointer, :uint], :uint
+
+    ffi_lib :gdi32
+
+    attach_function :GetEnhMetaFileBits, [:handle, :uint, :pointer], :uint
   end
 end
 
