@@ -7,6 +7,7 @@ module Windows
     typedef :uintptr_t, :hglobal
     typedef :uintptr_t, :hwnd
     typedef :uintptr_t, :handle
+    typedef :uintptr_t, :hdrop
 
     ffi_lib FFI::Library::LIBC
 
@@ -31,6 +32,10 @@ module Windows
     attach_function :OpenClipboard, [:hwnd], :bool
     attach_function :RegisterClipboardFormatA, [:string], :uint
     attach_function :SetClipboardData, [:uint, :handle], :handle
+
+    ffi_lib :shell32
+
+    attach_function :DragQueryFileA, [:hdrop, :uint, :pointer, :uint], :uint
   end
 end
 

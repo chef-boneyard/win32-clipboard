@@ -1,3 +1,4 @@
+require File.join(File.dirname(__FILE__), 'windows', 'constants')
 require File.join(File.dirname(__FILE__), 'windows', 'functions')
 
 # The Win32 module serves as a namespace only.
@@ -8,6 +9,7 @@ module Win32
   class Clipboard
 
     include Windows::Functions
+    include Windows::Constants
     extend Windows::Functions
 
     # The version of this library
@@ -30,8 +32,8 @@ module Win32
     # Files
     HDROP = 15
 
-    GHND = 0x0042
-
+    # Empties the contents of the clipboard.
+    #
     def self.empty
       begin
         open
@@ -47,6 +49,8 @@ module Win32
       alias clear empty
     end
 
+    # Returns the number of different data formats currently on the clipboard.
+    #
     def self.num_formats
       CountClipboardFormats() || 0
     end
@@ -56,7 +60,6 @@ module Win32
     def self.format_available?(format)
       IsClipboardFormatAvailable(format)
     end
-
 
     # Returns the data currently in the clipboard. If +format+ is
     # specified, it will attempt to retrieve the data in that format. The
@@ -97,15 +100,14 @@ module Win32
                   clip_data.force_encoding('BINARY')
                 end
               end
-
-            #when HDROP
-            #  clip_data = get_file_list(handle)
+            when HDROP
+              clip_data = get_file_list(handle)
             #when ENHMETAFILE
             #  clip_data = get_metafile_data(handle)
             #when DIB, BITMAP
             #  clip_data = get_image_data(handle)
             else
-              raise Error, 'format not supported'
+              raise "format '#{format}' not supported"
           end
         else
           clip_data = ''
@@ -121,6 +123,14 @@ module Win32
       alias get_data data
     end
 
+    # Sets the clipboard contents to the data that you specify. You may
+    # optionally specify a clipboard format. The default is Clipboard::TEXT.
+    #
+    # Example:
+    #
+    #    # Put the string 'hello' on the clipboard
+    #    Win32::Clipboard.set_data('hello')
+    #
     def self.set_data(clip_data, format = TEXT)
       begin
         clear
@@ -361,6 +371,7 @@ module Win32
 
       buf
     end
+=end
 
     # Get and return an array of file names that have been copied.
     #
@@ -369,18 +380,17 @@ module Win32
       count = DragQueryFile(handle, 0xFFFFFFFF, nil, 0)
 
       0.upto(count - 1){ |i|
-        length = DragQueryFile(handle, i, nil, 0) + 1
-        buf = 0.chr * length
-        DragQueryFile(handle, i, buf, buf.length)
-        array << buf.strip
+        length = DragQueryFileA(handle, i, nil, 0) + 1
+        buf = FFI::MemoryPointer.new(:char, length)
+        DragQueryFile(handle, i, buf, buf.size)
+        array << buf.read_string
       }
 
       array
     end
-=end
   end
 end
 
 if $0 == __FILE__
-  p Win32::Clipboard.formats
+  p Win32::Clipboard.data(15)
 end
