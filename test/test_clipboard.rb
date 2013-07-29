@@ -8,82 +8,88 @@
 #
 # You should run this test case via the 'rake test' task.
 ###########################################################################
-require 'rubygems'
-gem 'test-unit'
-
+require 'test-unit'
 require 'win32/clipboard'
-require 'test/unit'
 include Win32
 
 class TC_Win32_ClipBoard < Test::Unit::TestCase
-  def test_version
-    assert_equal('0.6.0', Clipboard::VERSION)
+  test "version is set to expected value" do
+    assert_equal('0.7.0', Clipboard::VERSION)
   end
 
-  def test_data
+  test "data method basic functionality" do
     assert_respond_to(Clipboard, :data)
     assert_nothing_raised{ Clipboard.data }
     assert_kind_of(String, Clipboard.data)
   end
 
-  def test_data_expected_errors
+  test "data method requires proper format" do
     assert_raise(TypeError){ Clipboard.data('test') }
     assert_raise(NameError){ Clipboard.data(CF_FOO) }
   end
 
-  def test_get_data_alias
+  test "get_data is an alias for data" do
     assert_respond_to(Clipboard, :get_data)
-    assert_true(Clipboard.method(:data) == Clipboard.method(:get_data))
+    assert_alias_method(Clipboard, :data, :get_data)
   end
 
-  def test_set_data
+  test "set_data basic functionality" do
     assert_respond_to(Clipboard, :set_data)
-    assert_nothing_raised{ Clipboard.set_data("foo") }
+    assert_nothing_raised{ Clipboard.set_data('foo') }
   end
 
-  def test_set_data_unicode
+  test "set_data works with unicode text" do
     assert_nothing_raised{
       Clipboard.set_data('Ηελλας', Clipboard::UNICODETEXT)
     }
   end
 
-  def test_set_data_expected_errors
+  test "set_data requires at least one argument" do
     assert_raise(ArgumentError){ Clipboard.set_data }
+  end
+
+  test "set_data requires a valid data format" do
     assert_raise(NameError){ Clipboard.set_data('foo', CF_FOO) }
   end
 
-  def test_set_and_get_ascii
+  test "set and get ascii data as expected" do
     assert_nothing_raised{ Clipboard.set_data('foobar') }
     assert_equal('foobar', Clipboard.data)
   end
 
-  def test_set_and_get_unicode
+  test "set and get unicode data as expected" do
     assert_nothing_raised{
        Clipboard.set_data('Ηελλας', Clipboard::UNICODETEXT)
     }
     assert_equal('Ηελλας', Clipboard.data(Clipboard::UNICODETEXT))
   end
 
-  def test_empty
+  test "empty method basic functionality" do
     assert_respond_to(Clipboard, :empty)
     assert_nothing_raised{ Clipboard.empty }
   end
 
-  def test_clear_alias
+  test "clear is an alias for empty" do
     assert_respond_to(Clipboard, :clear)
-    assert_true(Clipboard.method(:clear) == Clipboard.method(:empty))
+    assert_alias_method(Clipboard, :clear, :empty)
   end
 
-  def test_num_formats
+  test "num_formats basic functionality" do
     assert_respond_to(Clipboard, :num_formats)
     assert_nothing_raised{ Clipboard.num_formats }
     assert_kind_of(Fixnum, Clipboard.num_formats)
   end
 
-  def test_num_formats_expected_errors
+  test "num_formats returns an expected value" do
+    assert_true(Clipboard.num_formats >= 0)
+    assert_true(Clipboard.num_formats < 1000)
+  end
+
+  test "num_formats does not accept any arguments" do
     assert_raise(ArgumentError){ Clipboard.num_formats(true) }
   end
 
+=begin
   def test_register_format
     assert_respond_to(Clipboard, :register_format)
     assert_nothing_raised{ Clipboard.register_format('Ruby') }
@@ -103,13 +109,18 @@ class TC_Win32_ClipBoard < Test::Unit::TestCase
   def test_formats_expected_errors
     assert_raise(ArgumentError){ Clipboard.formats(true) }
   end
+=end
 
-  def test_format_available
+  test "format_available basic functionality" do
     assert_respond_to(Clipboard, :format_available?)
     assert_nothing_raised{ Clipboard.format_available?(1) }
+  end
+
+  test "format_available returns a boolean value" do
     assert_boolean(Clipboard.format_available?(1))
   end
 
+=begin
   def test_format_name
     assert_respond_to(Clipboard, :format_name)
     assert_nothing_raised{ Clipboard.format_name(1) }
@@ -133,4 +144,5 @@ class TC_Win32_ClipBoard < Test::Unit::TestCase
     assert_not_nil(Clipboard::HDROP)
     assert_not_nil(Clipboard::ENHMETAFILE)
   end
+=end
 end

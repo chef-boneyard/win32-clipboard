@@ -1,4 +1,4 @@
-require 'ffi'
+require File.join(File.dirname(__FILE__), 'windows', 'functions')
 
 # The Win32 module serves as a namespace only.
 module Win32
@@ -6,37 +6,9 @@ module Win32
   # The Clipboard class encapsulates functions that relate to the MS Windows
   # clipboard.
   class Clipboard
-    extend FFI::Library
 
-    private
-
-    typedef :ulong, :hglobal
-    typedef :ulong, :hwnd
-    typedef :ulong, :handle
-
-    ffi_lib FFI::Library::LIBC
-
-    attach_function :memcpy, [:pointer, :string, :size_t], :pointer
-
-    ffi_lib :kernel32
-
-    attach_function :GlobalAlloc, [:uint, :size_t], :hglobal
-    attach_function :GlobalFree, [:hglobal], :hglobal
-    attach_function :GlobalLock, [:hglobal], :pointer
-    attach_function :GetLastError, [], :ulong
-
-    ffi_lib :user32
-
-    attach_function :CloseClipboard, [], :bool
-    attach_function :CountClipboardFormats, [], :int
-    attach_function :EmptyClipboard, [], :bool
-    attach_function :EnumClipboardFormats, [:uint], :uint
-    attach_function :GetClipboardFormatNameA, [:uint, :buffer_out, :int], :int
-    attach_function :IsClipboardFormatAvailable, [:uint], :bool
-    attach_function :OpenClipboard, [:hwnd], :bool
-    attach_function :SetClipboardData, [:uint, :handle], :handle
-
-    public
+    include Windows::Functions
+    extend Windows::Functions
 
     # The version of this library
     VERSION = '0.7.0'
@@ -60,74 +32,113 @@ module Win32
 
     GHND = 0x0042
 
-    def initialize
+    def self.open
       unless OpenClipboard(0)
-        raise SystemCallError, GetLastError(), "OpenClipboard"
-      end
-
-      if block_given?
-        begin
-          yield self
-        ensure
-          close
-        end
+        raise SystemCallError.new('OpenClipboard', FFI.errno)
       end
     end
 
-    def close
+    def self.close
       unless CloseClipboard()
-        raise SystemCallError, GetLastError(), "CloseClipboard"
+        raise SystemCallError.new('CloseClipboard', FFI.errno)
       end
     end
 
-    def empty
-      unless EmptyClipboard()
-        raise SystemCallError, GetLastError(), "EmptyClipboard"
+    def self.empty
+      begin
+        open
+        unless EmptyClipboard()
+          raise SystemCallError.new('EmptyClipboard', FFI.errno)
+        end
+      ensure
+        close
       end
     end
 
-    alias clear empty
+    class << self
+      alias clear empty
+    end
 
-    def num_formats
-      val = CountClipboardFormats()
-
-      if val == 0
-        raise SystemCallError, GetLastError(), "CountClipboardFormats"
-      end
-
-      val
+    def self.num_formats
+      CountClipboardFormats() || 0
     end
 
     # Returns whether or not +format+ (an integer) is currently available.
     #
-    def format_available?(format)
+    def self.format_available?(format)
       IsClipboardFormatAvailable(format)
     end
 
-    def set_data(clip_data, format = TEXT)
-      clear
+    def self.data(format = TEXT)
+      begin
+        open
 
-      # NULL terminate text
-      case format
-        when TEXT, OEMTEXT, UNICODETEXT
-          clip_data # << "\0"
+        if IsClipboardFormatAvailable(format)
+          handle = GetClipboardData(format)
+
+          case format
+            when TEXT, OEMTEXT, UNICODETEXT
+              size = GlobalSize(handle)
+              ptr  = GlobalLock(handle)
+
+              clip_data = ptr.read_bytes(size).strip
+
+              if RUBY_VERSION.to_f >= 1.9
+                unless clip_data.ascii_only?
+                  clip_data.force_encoding('BINARY')
+                end
+              end
+
+            #when HDROP
+            #  clip_data = get_file_list(handle)
+            #when ENHMETAFILE
+            #  clip_data = get_metafile_data(handle)
+            #when DIB, BITMAP
+            #  clip_data = get_image_data(handle)
+            else
+              raise Error, 'format not supported'
+          end
+        else
+          clip_data = ''
+        end
+      ensure
+        close
       end
 
-      # Global Allocate a movable piece of memory.
-      hmem = GlobalAlloc(GHND, clip_data.length + 4)
-      mem  = GlobalLock(hmem)
+      clip_data
+    end
 
-      memcpy(mem, clip_data, clip_data.length)
+    class << self
+      alias get_data data
+    end
 
-      # Set the new data
+    def self.set_data(clip_data, format = TEXT)
       begin
+        clear
+        open
+
+        # NULL terminate text
+        case format
+          when TEXT, OEMTEXT, UNICODETEXT
+            clip_data # << "\0"
+        end
+
+        # Global Allocate a movable piece of memory.
+        hmem = GlobalAlloc(GHND, clip_data.length + 4) # TODO: Check "+4"
+        mem  = GlobalLock(hmem)
+
+        memcpy(mem, clip_data, clip_data.length)
+
+        # Set the new data
         if SetClipboardData(format, hmem) == 0
-          raise SystemCallError, GetLastError(), "SetClipboardData"
+          raise SystemCallError.new('SetClipboardData', FFI.errno)
         end
       ensure
         GlobalFree(hmem)
+        close
       end
     end
+=begin
 
     def formats
       hash = {}
@@ -433,7 +444,6 @@ module Win32
   end
 end
 
-c = Win32::Clipboard.new
-p c.num_formats
-p c.num_formats
-c.close
+if $0 == __FILE__
+  p Win32::Clipboard.data
+end
