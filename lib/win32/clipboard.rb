@@ -57,6 +57,27 @@ module Win32
       IsClipboardFormatAvailable(format)
     end
 
+
+    # Returns the data currently in the clipboard. If +format+ is
+    # specified, it will attempt to retrieve the data in that format. The
+    # default is Clipboard::TEXT.
+    #
+    # If there is no data in the clipboard, or data is available but the
+    # format doesn't match the data, then an empty string is returned.
+    #
+    # Examples:
+    #
+    #    # Get some plain text
+    #    Win32::Clipboard.data # => e.g. 'hello'
+    #
+    #    # Get a list of files copied from the Windows Explorer window
+    #    Win32::Clipboard.data(Clipboard::HDROP) # => ['foo.rb', 'bar.rb']
+    #
+    #    # Get a bitmap and write it to another file
+    #    File.open('bitmap_copy', 'wb'){ |fh|
+    #       fh.write Win32::Clipboard.data(Clipboard::DIB)
+    #    }
+    #
     def self.data(format = TEXT)
       begin
         open
@@ -127,6 +148,13 @@ module Win32
       end
     end
 
+    # Returns a hash of all the current formats, with the format number as
+    # the key and the format name as the value for that key.
+    #
+    # Example:
+    #
+    #    Win32::Clipboard.formats # => {1 => nil, 49335 => "HTML Format"}
+    #
     def self.formats
       formats = {}
       format = 0
@@ -146,108 +174,28 @@ module Win32
       formats
     end
 
-=begin
-
-    # Returns the data currently in the clipboard. If +format+ is
-    # specified, it will attempt to retrieve the data in that format. The
-    # default is Clipboard::TEXT.
-    #
-    # If there is no data in the clipboard, or data is available but the
-    # format doesn't match the data, then an empty string is returned.
-    #
-    # Examples:
-    #
-    #    # Get some plain text
-    #    Win32::Clipboard.data # => e.g. 'hello'
-    #
-    #    # Get a list of files copied from the Windows Explorer window
-    #    Win32::Clipboard.data(Clipboard::HDROP) # => ['foo.rb', 'bar.rb']
-    #
-    #    # Get a bitmap and write it to another file
-    #    File.open('bitmap_copy', 'wb'){ |fh|
-    #       fh.write Win32::Clipboard.data(Clipboard::DIB)
-    #    }
-    #
-    def self.data(format = TEXT)
-      begin
-        self.open
-        if IsClipboardFormatAvailable(format)
-          handle = GetClipboardData(format)
-          case format
-            when TEXT, OEMTEXT, UNICODETEXT
-              clip_data = 0.chr * GlobalSize(handle)
-              memcpy(clip_data, handle, clip_data.size)
-
-              if RUBY_VERSION.to_f >= 1.9
-                unless clip_data.ascii_only?
-                  clip_data.force_encoding('BINARY')
-                end
-              end
-
-              clip_data = clip_data[ /^[^\0]*/ ]
-            when HDROP
-              clip_data = get_file_list(handle)
-            when ENHMETAFILE
-              clip_data = get_metafile_data(handle)
-            when DIB, BITMAP
-              clip_data = get_image_data(handle)
-            else
-              raise Error, 'format not supported'
-          end
-        else
-          clip_data = ''
-        end
-      ensure
-        self.close
-      end
-
-      clip_data
-    end
-
     # Returns the corresponding name for the given +format_num+, or nil
     # if it does not exist. You cannot specify any of the predefined
     # clipboard formats (or nil is returned), only registered formats.
     #
     def self.format_name(format_num)
       val = nil
-      buf = 0.chr * 80
+      buf = FFI::MemoryPointer.new(:char, 80)
 
       begin
-        self.open
-        if GetClipboardFormatName(format_num, buf, buf.length) != 0
-          val = buf
+        open
+
+        if GetClipboardFormatNameA(format_num, buf, buf.size) != 0
+          val = buf.read_string
         end
       ensure
-        self.close
+        close
       end
 
-      val.split(0.chr).first rescue nil
+      val
     end
 
-    # Returns a hash of all the current formats, with the format number as
-    # the key and the format name as the value for that key.
-    #
-    # Example:
-    #
-    #    Win32::Clipboard.formats # => {1 => nil, 49335 => "HTML Format"}
-    #
-    def self.formats
-      formats = {}
-      format = 0
-
-      begin
-        self.open
-        while 0 != (format = EnumClipboardFormats(format))
-          buf = 0.chr * 80
-          GetClipboardFormatName(format, buf, buf.length)
-          formats[format] = buf.split(0.chr).first
-        end
-      ensure
-        self.close
-      end
-
-      formats
-    end
+=begin
 
     # Registers the given +format+ (a String) as a clipboard format, which
     # can then be used as a valid clipboard format. Returns the integer

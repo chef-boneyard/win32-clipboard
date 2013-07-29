@@ -126,17 +126,21 @@ class TC_Win32_ClipBoard < Test::Unit::TestCase
     assert_boolean(Clipboard.format_available?(1))
   end
 
-=begin
-  def test_format_name
+  test "format_name basic functionality" do
     assert_respond_to(Clipboard, :format_name)
     assert_nothing_raised{ Clipboard.format_name(1) }
+  end
+
+  test "format_name returns expected value" do
+    assert_equal("HTML Format", Clipboard.format_name(49419))
     assert_nil(Clipboard.format_name(9999999))
   end
 
-  def test_format_name_expected_errors
+  test "format_name requires a numeric argument" do
     assert_raise(TypeError){ Clipboard.format_name('foo') }
   end
 
+=begin
   def test_notify_change
     assert_respond_to(Clipboard, :notify_change)
   end
