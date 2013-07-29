@@ -17,7 +17,7 @@ module Windows
     attach_function :GlobalAlloc, [:uint, :size_t], :hglobal
     attach_function :GlobalFree, [:hglobal], :hglobal
     attach_function :GlobalLock, [:hglobal], :pointer
-    attach_function :GetLastError, [], :ulong
+    attach_function :GlobalSize, [:hglobal], :size_t
 
     ffi_lib :user32
 
@@ -25,6 +25,7 @@ module Windows
     attach_function :CountClipboardFormats, [], :int
     attach_function :EmptyClipboard, [], :bool
     attach_function :EnumClipboardFormats, [:uint], :uint
+    attach_function :GetClipboardData, [:uint], :handle
     attach_function :GetClipboardFormatNameA, [:uint, :buffer_out, :int], :int
     attach_function :IsClipboardFormatAvailable, [:uint], :bool
     attach_function :OpenClipboard, [:hwnd], :bool
