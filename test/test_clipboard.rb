@@ -99,17 +99,23 @@ class TC_Win32_ClipBoard < Test::Unit::TestCase
   def test_register_format_expected_errors
     assert_raises(TypeError){ Clipboard.register_format(1) }
   end
+=end
 
-  def test_formats
+  test "formats method basic functionality" do
     assert_respond_to(Clipboard, :formats)
     assert_nothing_raised{ Clipboard.formats }
     assert_kind_of(Hash, Clipboard.formats)
   end
 
-  def test_formats_expected_errors
+  # TODO: Why do these fail?
+  #test "formats result contains expected values" do
+  #  assert_true(Clipboard.formats.size > 0)
+  #  assert_true(Clipboard.formats.include?(1))
+  #end
+
+  test "formats method does not accept any arguments" do
     assert_raise(ArgumentError){ Clipboard.formats(true) }
   end
-=end
 
   test "format_available basic functionality" do
     assert_respond_to(Clipboard, :format_available?)
