@@ -195,8 +195,6 @@ module Win32
       val
     end
 
-=begin
-
     # Registers the given +format+ (a String) as a clipboard format, which
     # can then be used as a valid clipboard format. Returns the integer
     # value of the registered format.
@@ -211,18 +209,16 @@ module Win32
     # through 0xFFFF.
     #
     def self.register_format(format)
-      raise TypeError unless format.is_a?(String)
-
-      format_value = RegisterClipboardFormat(format)
+      format_value = RegisterClipboardFormatA(format)
 
       if format_value == 0
-        error = "RegisterClipboardFormat() call failed: " + get_last_error
-        raise Error, error
+        raise SystemCallError.new('RegisterClipboardFormat', FFI.errno)
       end
 
       format_value
     end
 
+=begin
     # Sets up a notification loop that will call the provided block whenever
     # there's a change to the clipboard.
     #

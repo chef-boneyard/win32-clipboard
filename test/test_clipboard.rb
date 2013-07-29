@@ -89,17 +89,15 @@ class TC_Win32_ClipBoard < Test::Unit::TestCase
     assert_raise(ArgumentError){ Clipboard.num_formats(true) }
   end
 
-=begin
-  def test_register_format
+  test "register_format basic functionality" do
     assert_respond_to(Clipboard, :register_format)
     assert_nothing_raised{ Clipboard.register_format('Ruby') }
     assert_kind_of(Integer, Clipboard.register_format('Ruby'))
   end
 
-  def test_register_format_expected_errors
+  test "register_format requires a string argument" do
     assert_raises(TypeError){ Clipboard.register_format(1) }
   end
-=end
 
   test "formats method basic functionality" do
     assert_respond_to(Clipboard, :formats)
