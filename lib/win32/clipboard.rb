@@ -377,12 +377,12 @@ module Win32
     #
     def self.get_file_list(handle)
       array = []
-      count = DragQueryFile(handle, 0xFFFFFFFF, nil, 0)
+      count = DragQueryFileA(handle, 0xFFFFFFFF, nil, 0)
 
       0.upto(count - 1){ |i|
         length = DragQueryFileA(handle, i, nil, 0) + 1
         buf = FFI::MemoryPointer.new(:char, length)
-        DragQueryFile(handle, i, buf, buf.size)
+        DragQueryFileA(handle, i, buf, buf.size)
         array << buf.read_string
       }
 
