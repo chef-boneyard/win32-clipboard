@@ -28,9 +28,23 @@ task :example do
   sh "ruby -Ilib examples/clipboard_test.rb"
 end
 
-Rake::TestTask.new do |t|
-  t.warning = true
-  t.verbose = true
+namespace :test do
+  Rake::TestTask.new(:all) do |t|
+    t.warning = true
+    t.verbose = true
+  end
+
+  Rake::TestTask.new(:html) do |t|
+    t.warning = true
+    t.verbose = true
+    t.test_files = FileList['test/test_html_clipboard.rb']
+  end
+
+  Rake::TestTask.new(:std) do |t|
+    t.warning = true
+    t.verbose = true
+    t.test_files = FileList['test/test_clipboard.rb']
+  end
 end
 
-task :default => :test
+task :default => 'test:all'
