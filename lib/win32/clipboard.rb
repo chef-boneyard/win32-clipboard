@@ -5,8 +5,7 @@ require File.join(File.dirname(__FILE__), 'windows', 'functions')
 # The Win32 module serves as a namespace only.
 module Win32
 
-  # The Clipboard class encapsulates functions that relate to the MS Windows
-  # clipboard.
+  # The Clipboard class encapsulates functions that relate to the MS Windows clipboard.
   class Clipboard
 
     include Windows::Constants
@@ -17,23 +16,27 @@ module Win32
     extend Windows::Structs
 
     # The version of this library
-    VERSION = '0.7.0'
+    VERSION = '0.6.0'
 
     # Clipboard formats
 
     # Text
+
     TEXT = 1
     OEMTEXT = 7
     UNICODETEXT = 13
 
     # Images
+
     DIB = 8
     BITMAP = 2
 
     # Metafiles
+
     ENHMETAFILE = 14
 
     # Files
+
     HDROP = 15
 
     # Empties the contents of the clipboard.
@@ -99,10 +102,8 @@ module Win32
 
               clip_data = ptr.read_bytes(size).strip
 
-              if RUBY_VERSION.to_f >= 1.9
-                unless clip_data.ascii_only?
-                  clip_data.force_encoding('BINARY')
-                end
+              unless clip_data.ascii_only?
+                clip_data.force_encoding('BINARY')
               end
             when HDROP
               clip_data = get_file_list(handle)
@@ -177,7 +178,7 @@ module Win32
         self.open
         while 0 != (format = EnumClipboardFormats(format))
           buf = FFI::MemoryPointer.new(:char, 80)
-          GetClipboardFormatNameA(format, buf, buf.size)
+          GetClipboardFormatName(format, buf, buf.size)
           string = buf.read_string
           formats[format] = string.empty? ? nil : string
         end
@@ -199,7 +200,7 @@ module Win32
       begin
         open
 
-        if GetClipboardFormatNameA(format_num, buf, buf.size) != 0
+        if GetClipboardFormatName(format_num, buf, buf.size) != 0
           val = buf.read_string
         end
       ensure
@@ -223,7 +224,7 @@ module Win32
     # through 0xFFFF.
     #
     def self.register_format(format)
-      format_value = RegisterClipboardFormatA(format)
+      format_value = RegisterClipboardFormat(format)
 
       if format_value == 0
         raise SystemCallError.new('RegisterClipboardFormat', FFI.errno)
