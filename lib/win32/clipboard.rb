@@ -233,7 +233,6 @@ module Win32
       format_value
     end
 
-=begin
     # Sets up a notification loop that will call the provided block whenever
     # there's a change to the clipboard.
     #
@@ -248,11 +247,11 @@ module Win32
     #
     def self.notify_change(&block)
       name   = 'ruby-clipboard-' + Time.now.to_s
-      handle = CreateWindow('static', name, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+      handle = CreateWindowEx(0, 'static', name, 0, 0, 0, 0, 0, 0, 0, 0, nil)
 
       @first_notify = true
 
-      wnd_proc = Win32::API::Callback.new('LLLL', 'L') do |hwnd, umsg, wparam, lparam|
+      wnd_proc = Proc.new do |hwnd, umsg, wparam, lparam|
         case umsg
            when WM_DRAWCLIPBOARD
              yield unless @first_notify
@@ -277,12 +276,24 @@ module Win32
         rv
       end
 
-      SetWindowLongPtr(handle, GWL_WNDPROC, wnd_proc.address)
-      next_viewer  = SetClipboardViewer(handle)
+      if SetWindowLongPtr(handle, GWL_WNDPROC, wnd_proc) == 0
+        raise SystemCallError.new('SetWindowLongPtr', FFI.errno)
+      end
 
-      SetWindowLongPtr(handle, GWL_USERDATA, next_viewer)
+      next_viewer = SetClipboardViewer(handle)
 
-      msg = 0.chr * 100
+      if next_viewer.nil?
+        raise SystemCallError.new('SetClipboardViewer', FFI.errno)
+      end
+
+      ptr = FFI::MemoryPointer.new(:uintptr_t)
+      ptr.write_ulong_long(next_viewer)
+
+      if SetWindowLongPtr(handle, GWL_USERDATA, ptr) == 0
+        raise SystemCallError.new('SetWindowLongPtr', FFI.errno)
+      end
+
+      msg = FFI::MemoryPointer.new(:char, 100)
 
       while true
         while PeekMessage(msg, handle, 0, 0, 1)
@@ -292,7 +303,6 @@ module Win32
         sleep 0.1
       end
     end
-=end
 
     private
 
@@ -390,5 +400,7 @@ module Win32
 end
 
 if $0 == __FILE__
-  p Win32::Clipboard.data(15)
+  include Win32
+  #p Clipboard.data(15)
+  Clipboard.notify_change{ |c| puts "Change!" }
 end
