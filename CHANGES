@@ -1,5 +1,6 @@
-== 0.5.3 - ???
-* Minor tweaks to the gemspec.
+== 0.6.0 - ???
+* Converted code to use FFI.
+* Now requires Ruby 1.9.1 or later and Windows Vista or later.
 
 == 0.5.2 - 14-Jul-2009
 * Replaced some missing include's that I thought were unnecessary. Thanks go
