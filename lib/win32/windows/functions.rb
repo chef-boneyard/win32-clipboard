@@ -27,10 +27,10 @@ module Windows
     attach_function :EmptyClipboard, [], :bool
     attach_function :EnumClipboardFormats, [:uint], :uint
     attach_function :GetClipboardData, [:uint], :handle
-    attach_function :GetClipboardFormatNameA, [:uint, :pointer, :int], :int
+    attach_function :GetClipboardFormatName, :GetClipboardFormatNameA, [:uint, :pointer, :int], :int
     attach_function :IsClipboardFormatAvailable, [:uint], :bool
     attach_function :OpenClipboard, [:hwnd], :bool
-    attach_function :RegisterClipboardFormatA, [:string], :uint
+    attach_function :RegisterClipboardFormat, :RegisterClipboardFormatA, [:string], :uint
     attach_function :SetClipboardData, [:uint, :handle], :handle
 
     ffi_lib :shell32
