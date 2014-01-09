@@ -14,7 +14,7 @@ include Win32
 
 class TC_Win32_ClipBoard < Test::Unit::TestCase
   test "version is set to expected value" do
-    assert_equal('0.7.0', Clipboard::VERSION)
+    assert_equal('0.6.0', Clipboard::VERSION)
   end
 
   test "data method basic functionality" do
@@ -138,12 +138,11 @@ class TC_Win32_ClipBoard < Test::Unit::TestCase
     assert_raise(TypeError){ Clipboard.format_name('foo') }
   end
 
-=begin
-  def test_notify_change
+  test "notify_change basic functionality" do
     assert_respond_to(Clipboard, :notify_change)
   end
 
-  def test_constants
+  test "expected constants are defined" do
     assert_not_nil(Clipboard::TEXT)
     assert_not_nil(Clipboard::OEMTEXT)
     assert_not_nil(Clipboard::UNICODETEXT)
@@ -152,5 +151,4 @@ class TC_Win32_ClipBoard < Test::Unit::TestCase
     assert_not_nil(Clipboard::HDROP)
     assert_not_nil(Clipboard::ENHMETAFILE)
   end
-=end
 end
