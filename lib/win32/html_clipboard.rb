@@ -8,7 +8,7 @@ module Win32
   # handles text in HTML format.
   #
   class HtmlClipboard < Clipboard
-      
+
     private
 
     # Marker block output
@@ -31,8 +31,8 @@ module Win32
     #    the start of the selection.
     #
     # EndSelection: bytecount from the beginning of the clipboard to the
-    #    end of the selection. 
-    # 
+    #    end of the selection.
+    #
     MARKER_BLOCK_OUTPUT =
       "Version:1.0\r\n" \
       "StartHTML:%09d\r\n" \
@@ -53,8 +53,8 @@ module Win32
       'StartSelection:(\d+)\s+' \
       'EndSelection:(\d+)\s+' \
       'SourceURL:(\S+)'
- 
-    # Regular expression for extended marker block         
+
+    # Regular expression for extended marker block
     MARKER_BLOCK_EX_RE = Regexp.new(MARKER_BLOCK_EX, Regexp::MULTILINE) # :nodoc:
 
     # Standard marker block
@@ -178,11 +178,11 @@ module Win32
       # Set the new data
       begin
         if SetClipboardData(CF_HTML, hmem) == 0
-          raise Error, "SetClipboardData() failed: " + get_last_error
+          raise SystemCallError.new('SetClipboardData', FFI.errno)
         end
 
         if SetClipboardData(CF_TEXT, hmem2) == 0
-          raise Error, "SetClipboardData() failed: " + get_last_error
+          raise SystemCallError.new('SetClipboardData', FFI.errno)
         end
       ensure
         GlobalFree(hmem)
