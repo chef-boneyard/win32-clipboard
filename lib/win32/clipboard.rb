@@ -251,7 +251,7 @@ module Win32
 
       @first_notify = true
 
-      wnd_proc = Proc.new do |hwnd, umsg, wparam, lparam|
+      wnd_proc = FFI::Function.new(:uintptr_t, [:uintptr_t, :uint, :uintptr_t, :uintptr_t]) do |hwnd, umsg, wparam, lparam|
         case umsg
            when WM_DRAWCLIPBOARD
              yield unless @first_notify
@@ -276,7 +276,7 @@ module Win32
         rv
       end
 
-      if SetWindowLongPtr(handle, GWL_WNDPROC, wnd_proc) == 0
+      if SetWindowLongPtr(handle, GWL_WNDPROC, wnd_proc.address) == 0
         raise SystemCallError.new('SetWindowLongPtr', FFI.errno)
       end
 
@@ -286,12 +286,7 @@ module Win32
         raise SystemCallError.new('SetClipboardViewer', FFI.errno)
       end
 
-      ptr = FFI::MemoryPointer.new(:uintptr_t)
-      ptr.write_ulong_long(next_viewer)
-
-      if SetWindowLongPtr(handle, GWL_USERDATA, ptr) == 0
-        raise SystemCallError.new('SetWindowLongPtr', FFI.errno)
-      end
+      SetWindowLongPtr(handle, GWL_USERDATA, next_viewer)
 
       msg = FFI::MemoryPointer.new(:char, 100)
 
@@ -402,5 +397,5 @@ end
 if $0 == __FILE__
   include Win32
   #p Clipboard.data(15)
-  Clipboard.notify_change{ |c| puts "Change!" }
+  Clipboard.notify_change{ |c| puts "Change: #{c}" }
 end
