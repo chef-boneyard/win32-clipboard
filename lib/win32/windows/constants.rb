@@ -5,5 +5,6 @@ module Windows
     WM_CHANGECBCHAIN = 0x030D
     GWL_USERDATA = -21
     GWL_WNDPROC  = -4
+    CF_TEXT = 1
   end
 end

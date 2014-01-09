@@ -29,7 +29,6 @@ module Windows
 
     attach_function :CloseClipboard, [], :bool
     attach_function :CountClipboardFormats, [], :int
-    #attach_function :CreateWindow, :CreateWindowA, [:string, :string, :dword, :int, :int, :int, :int, :hwnd, :hmenu, :hinstance, :pointer], :hwnd
     attach_function :CreateWindowEx, :CreateWindowExA, [:dword, :string, :string, :dword, :int, :int, :int, :int, :hwnd, :hmenu, :hinstance, :pointer], :hwnd
     attach_function :DefWindowProc, :DefWindowProcA, [:hwnd, :uint, :uint, :uint], :long
     attach_function :DispatchMessage, :DispatchMessageA, [:pointer], :uint
@@ -41,11 +40,11 @@ module Windows
     attach_function :IsClipboardFormatAvailable, [:uint], :bool
     attach_function :OpenClipboard, [:hwnd], :bool
     attach_function :PeekMessage, :PeekMessageA, [:pointer, :hwnd, :uint, :uint, :uint], :bool
-    attach_function :PostMessage, :PostMessageA, [:hwnd, :uint, :uint, :uint], :bool
+    attach_function :PostMessage, :PostMessageA, [:hwnd, :uint, :uintptr_t, :uintptr_t], :bool
     attach_function :RegisterClipboardFormat, :RegisterClipboardFormatA, [:string], :uint
     attach_function :SetClipboardData, [:uint, :handle], :handle
     attach_function :SetClipboardViewer, [:hwnd], :hwnd
-    attach_function :SetWindowLongPtr, :SetWindowLongPtrA, [:hwnd, :int, :pointer], :long
+    attach_function :SetWindowLongPtr, :SetWindowLongPtrA, [:hwnd, :int, :uintptr_t], :long
     attach_function :TranslateMessage, [:pointer], :bool
 
     ffi_lib :shell32
