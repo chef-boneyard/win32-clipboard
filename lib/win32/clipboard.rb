@@ -136,22 +136,32 @@ module Win32
     #    # Put the string 'hello' on the clipboard
     #    Win32::Clipboard.set_data('hello')
     #
+    #    # Put the image test.bmp on the clipboard
+    #    f = File.open("test.bmp", "rb")
+    #    str = f.read
+    #    Clipboard.set_data(str, Win32::Clipboard::DIB)
+    #
     def self.set_data(clip_data, format = TEXT)
       begin
         clear
         open
 
-        # NULL terminate text
+        # NULL terminate text or strip header of bitmap file
         case format
           when TEXT, OEMTEXT, UNICODETEXT
-            clip_data # << "\0"
+            clip_data << "\0"
+            buf = clip_data
+            extra = 4
+          when BITMAP, DIB
+            buf = clip_data[14..clip_data.length] # sizeof(BITMAPFILEHEADER) = 14
+            extra = 0
         end
 
         # Global Allocate a movable piece of memory.
-        hmem = GlobalAlloc(GHND, clip_data.length + 4) # TODO: Check "+4"
+        hmem = GlobalAlloc(GHND, buf.size + extra)
         mem  = GlobalLock(hmem)
 
-        memcpy(mem, clip_data, clip_data.length)
+        memcpy(mem, buf, buf.size)
 
         # Set the new data
         if SetClipboardData(format, hmem) == 0

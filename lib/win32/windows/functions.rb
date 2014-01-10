@@ -16,7 +16,7 @@ module Windows
 
     ffi_lib FFI::Library::LIBC
 
-    attach_function :memcpy, [:pointer, :string, :size_t], :pointer
+    attach_function :memcpy, [:pointer, :buffer_in, :size_t], :pointer
 
     ffi_lib :kernel32
 
