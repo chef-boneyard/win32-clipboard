@@ -5,6 +5,8 @@
   in html format.
 * Added the get_html_data and set_html_data methods to the Clipboard class.
   These are wrappers for the HtmlClipboard methods.
+* You can now set bitmap data properly as well as retrieve it. Thanks go to
+  Tadashi Kba for the patch.
 
 == 0.5.2 - 14-Jul-2009
 * Replaced some missing include's that I thought were unnecessary. Thanks go
