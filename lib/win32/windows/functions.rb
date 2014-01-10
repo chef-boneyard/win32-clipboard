@@ -14,16 +14,13 @@ module Windows
 
     callback :wnd_proc, [:hwnd, :uint, :long, :long], :long
 
-    ffi_lib FFI::Library::LIBC
-
-    attach_function :memcpy, [:pointer, :buffer_in, :size_t], :pointer
-
     ffi_lib :kernel32
 
     attach_function :GlobalAlloc, [:uint, :size_t], :hglobal
     attach_function :GlobalFree, [:hglobal], :hglobal
     attach_function :GlobalLock, [:hglobal], :pointer
     attach_function :GlobalSize, [:hglobal], :size_t
+    attach_function :GlobalUnlock, [:hglobal], :bool
 
     ffi_lib :user32
 
