@@ -91,7 +91,7 @@ module Win32
       # Set the new data
       begin
         if SetClipboardData(format, hmem) == 0
-          raise SystemCallError.new('SetClipboardData', FFI.errno)
+          raise Error, 'SetClipboardData() failed' + get_last_error
         end
       ensure
         GlobalFree(hmem)
