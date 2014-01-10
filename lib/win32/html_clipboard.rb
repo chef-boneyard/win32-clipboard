@@ -1,5 +1,3 @@
-require 'win32/clipboard'
-
 # The Win32 module serves as a namespace only.
 #
 module Win32
@@ -226,7 +224,7 @@ module Win32
         @source = matches[6]
         @selection = @fragment
       else
-        raise Error, 'failed to match block markers'
+        raise 'failed to match block markers'
       end
       @fragment
     end
