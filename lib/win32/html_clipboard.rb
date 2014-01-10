@@ -100,10 +100,10 @@ module Win32
         self.open
         if IsClipboardFormatAvailable(CF_HTML)
           handle = GetClipboardData(CF_HTML)
-          clip_data = 0.chr * GlobalSize(handle)
-          memcpy(clip_data, handle, clip_data.size)
-          clip_data[ /^[^\0]*/ ]
-          clip_data = decode_data(clip_data)
+          size   = GlobalSize(handle)
+          ptr    = FFI::Pointer.new(:char, handle)
+
+          clip_data = decode_data(ptr.read_bytes(size))
         else
           clip_data = ''
         end
@@ -166,12 +166,12 @@ module Win32
       # Global Allocate a movable piece of memory.
       hmem = GlobalAlloc(GHND, clip_data.length + 4)
       mem  = GlobalLock(hmem)
-      memcpy(mem, clip_data, clip_data.length)
+      mem.write_bytes(clip_data, 0, clip_data.size)
 
       clip_data2 = fragment.gsub(/<[^>]+?>/,'')
       hmem2 = GlobalAlloc(GHND, clip_data2.length + 4)
       mem2  = GlobalLock(hmem2)
-      memcpy(mem2, clip_data2, clip_data2.length)
+      mem2.write_bytes(clip_data2, 0, clip_data2.size)
 
       # Set the new data
       begin
