@@ -394,8 +394,4 @@ module Win32
   end
 end
 
-if $0 == __FILE__
-  include Win32
-  #p Clipboard.data(15)
-  Clipboard.notify_change{ |c| puts "Change: #{c}" }
-end
+require File.join(File.dirname(__FILE__), 'html_clipboard')
