@@ -109,8 +109,8 @@ module Win32
               clip_data = get_file_list(handle)
             when ENHMETAFILE
               clip_data = get_metafile_data(handle)
-            #when DIB, BITMAP
-            #  clip_data = get_image_data(handle)
+            when DIB, BITMAP
+              clip_data = get_image_data(handle)
             else
               raise "format '#{format}' not supported"
           end
@@ -159,9 +159,9 @@ module Win32
 
         # Global Allocate a movable piece of memory.
         hmem = GlobalAlloc(GHND, buf.size + extra)
-        mem  = GlobalLock(hmem)
+        mptr = GlobalLock(hmem)
 
-        memcpy(mem, buf, buf.size)
+        mptr.write_bytes(buf, 0, buf.size)
 
         # Set the new data
         if SetClipboardData(format, hmem) == 0
@@ -338,20 +338,21 @@ module Win32
     end
 
     # Get data for bitmap files
-    #--
-    # TODO: FINISH
     #
     def self.get_image_data(handle)
-      bmi = BITMAPINFO.new
+      buf = nil
 
       begin
-        address  = GlobalLock(handle)
+        ptr = GlobalLock(handle)
         buf_size = GlobalSize(handle)
 
-        bmi.address = address
+        bmi = BITMAPINFO.new(ptr)
+
+        size_image = bmi[:bmiHeader][:biSizeImage]
+        size_image = buf_size + 16 if size_image == 0
 
         # Calculate the header size
-        case bmi[:biBitCount]
+        case bmi[:bmiHeader][:biBitCount]
           when 1
             table_size = 2
           when 4
@@ -359,28 +360,25 @@ module Win32
           when 8
             table_size = 256
           when 16, 32
-            if bmi[:biCompression] == 0
-              table_size = bmi[:biClrUsed]
+            if bmi[:bmiHeader][:biCompression] == 0
+              table_size = bmi[:bmiHeader][:biClrUsed]
             elsif compression == 3
               table_size = 3
             else
               raise "invalid bit/compression combination"
             end
           when 24
-            table_size = bmi[:biClrUsed]
+            table_size = bmi[:bmiHeader][:biClrUsed]
           else
             raise "invalid bit count"
         end # case
 
         # TODO: Document what's happening here.
         offset = 0x36 + (table_size * 4)
-        buf = 0.chr * buf_size
 
-        memcpy(buf, address, buf.size)
-
-        buf = "\x42\x4D" + [size_image].pack('L') + 0.chr * 4 + [offset].pack('L') + buf
+        buf = "\x42\x4D" + [size_image].pack('L') + 0.chr * 4 + [offset].pack('L') + ptr.read_bytes(buf_size)
       ensure
-        GlobalUnlock(handle)
+        GlobalUnlock(handle) if handle
       end
 
       buf
