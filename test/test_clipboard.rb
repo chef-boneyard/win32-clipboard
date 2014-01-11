@@ -130,7 +130,8 @@ class TC_Win32_ClipBoard < Test::Unit::TestCase
   end
 
   test "format_name returns expected value" do
-    assert_equal("HTML Format", Clipboard.format_name(49422))
+    format = Clipboard.register_format('HTML Format')
+    assert_equal('HTML Format', Clipboard.format_name(format))
     assert_nil(Clipboard.format_name(9999999))
   end
 
