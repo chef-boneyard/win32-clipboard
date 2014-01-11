@@ -96,7 +96,11 @@ module Win32
           handle = GetClipboardData(format)
 
           case format
-            when TEXT, OEMTEXT, UNICODETEXT
+            when UNICODETEXT
+              size = GlobalSize(handle)
+              ptr  = GlobalLock(handle)
+              clip_data = ptr.read_bytes(size).force_encoding('UTF-16LE').encode('UTF-8').strip
+            when TEXT, OEMTEXT
               size = GlobalSize(handle)
               ptr  = GlobalLock(handle)
 
@@ -148,7 +152,12 @@ module Win32
 
         # NULL terminate text or strip header of bitmap file
         case format
-          when TEXT, OEMTEXT, UNICODETEXT
+          when UNICODETEXT
+            clip_data.encode!('UTF-16LE')
+	    clip_data << "\0".encode('UTF-16LE')
+            buf = clip_data
+            extra = 4
+          when TEXT, OEMTEXT
             clip_data << "\0"
             buf = clip_data
             extra = 4
@@ -158,10 +167,10 @@ module Win32
         end
 
         # Global Allocate a movable piece of memory.
-        hmem = GlobalAlloc(GHND, buf.size + extra)
+        hmem = GlobalAlloc(GHND, buf.bytesize + extra)
         mptr = GlobalLock(hmem)
 
-        mptr.write_bytes(buf, 0, buf.size)
+        mptr.write_bytes(buf, 0, buf.bytesize)
 
         # Set the new data
         if SetClipboardData(format, hmem) == 0
