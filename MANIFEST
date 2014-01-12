@@ -5,4 +5,8 @@
 * win32-clipboard.gemspec
 * examples/clipboard_test.rb
 * lib/win32/clipboard.rb
+* lib/win32/html_clipboard.rb
+* lib/win32/windows/constants.rb
+* lib/win32/windows/functions.rb
+* lib/win32/windows/structs.rb
 * test/test_clipboard.rb

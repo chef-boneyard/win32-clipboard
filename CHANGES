@@ -1,4 +1,4 @@
-== 0.6.0 - ???
+== 0.6.0 - 12-Jan-2014
 * Converted code to use FFI.
 * Now requires Ruby 1.9.1 or later and Windows Vista or later.
 * The HtmlClipboard class has been added. This lets you get and set data
