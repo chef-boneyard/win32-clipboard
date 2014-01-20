@@ -33,7 +33,6 @@ module Windows
     attach_function :EnumClipboardFormats, [:uint], :uint
     attach_function :GetClipboardData, [:uint], :handle
     attach_function :GetClipboardFormatName, :GetClipboardFormatNameA, [:uint, :pointer, :int], :int
-    attach_function :GetWindowLongPtr, :GetWindowLongPtrA, [:hwnd, :int], :long
     attach_function :IsClipboardFormatAvailable, [:uint], :bool
     attach_function :OpenClipboard, [:hwnd], :bool
     attach_function :PeekMessage, :PeekMessageA, [:pointer, :hwnd, :uint, :uint, :uint], :bool
@@ -41,8 +40,16 @@ module Windows
     attach_function :RegisterClipboardFormat, :RegisterClipboardFormatA, [:string], :uint
     attach_function :SetClipboardData, [:uint, :handle], :handle
     attach_function :SetClipboardViewer, [:hwnd], :hwnd
-    attach_function :SetWindowLongPtr, :SetWindowLongPtrA, [:hwnd, :int, :uintptr_t], :long
     attach_function :TranslateMessage, [:pointer], :bool
+
+    # Use Long on 32-bit Ruby, LongPtr on 64-bit Ruby
+    begin
+      attach_function :GetWindowLongPtr, :GetWindowLongPtrA, [:hwnd, :int], :long
+      attach_function :SetWindowLongPtr, :SetWindowLongPtrA, [:hwnd, :int, :uintptr_t], :long
+    rescue FFI::NotFoundError
+      attach_function :GetWindowLongPtr, :GetWindowLongA, [:hwnd, :int], :long
+      attach_function :SetWindowLongPtr, :SetWindowLongA, [:hwnd, :int, :uintptr_t], :long
+    end
 
     ffi_lib :shell32
 
