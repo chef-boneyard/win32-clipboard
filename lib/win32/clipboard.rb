@@ -16,7 +16,7 @@ module Win32
     extend Windows::Structs
 
     # The version of this library
-    VERSION = '0.6.0'
+    VERSION = '0.6.1'
 
     # Clipboard formats
 
@@ -154,7 +154,7 @@ module Win32
         case format
           when UNICODETEXT
             clip_data.encode!('UTF-16LE')
-	    clip_data << "\0".encode('UTF-16LE')
+            clip_data << "\0".encode('UTF-16LE')
             buf = clip_data
             extra = 4
           when TEXT, OEMTEXT
