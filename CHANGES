@@ -1,3 +1,7 @@
+== 0.6.1 - 20-Jan-2014
+* Use 32-bit versions of GetWindowLong and SetWindowLong functions on 32-bit
+  versions of Ruby. Thanks go to Orgad Shaneh for the spot.
+
 == 0.6.0 - 12-Jan-2014
 * Converted code to use FFI.
 * Now requires Ruby 1.9.1 or later and Windows Vista or later.
