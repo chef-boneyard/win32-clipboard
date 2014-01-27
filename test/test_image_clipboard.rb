@@ -11,6 +11,7 @@ include Win32
 class TC_Image_ClipBoard < Test::Unit::TestCase
   class << self
     def startup
+      $is_ready = false
       @t = Thread.new do
         begin
           Win32::Clipboard.notify_change {$is_ready = true}
@@ -18,6 +19,11 @@ class TC_Image_ClipBoard < Test::Unit::TestCase
           puts $!
           puts e.backtrace
         end
+      end
+      # wait for notify_change running
+      until $is_ready
+        Clipboard.set_data('foo')
+        sleep 0.1
       end
     end
 
