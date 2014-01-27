@@ -16,7 +16,7 @@ module Win32
     extend Windows::Structs
 
     # The version of this library
-    VERSION = '0.6.1'
+    VERSION = '0.6.2'
 
     # Clipboard formats
 
