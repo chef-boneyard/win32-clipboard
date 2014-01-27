@@ -162,7 +162,7 @@ module Win32
             buf = clip_data
             extra = 4
           when BITMAP, DIB
-            buf = clip_data[14..clip_data.length] # sizeof(BITMAPFILEHEADER) = 14
+            buf = clip_data[BITMAP_FILE_HEADER_SIZE..clip_data.length]
             extra = 0
         end
 
@@ -320,6 +320,14 @@ module Win32
 
     private
 
+    # sizeof(BITMAPFILEHEADER)
+
+    BITMAP_FILE_HEADER_SIZE = 14
+
+    # sizeof(BITMAPINFOHEADER)
+
+    BITMAP_INFO_HEADER_SIZE = 40
+
     # Opens the clipboard and prevents other applications from modifying
     # the clipboard content until it is closed.
     #
@@ -357,8 +365,7 @@ module Win32
 
         bmi = BITMAPINFO.new(ptr)
 
-        size_image = bmi[:bmiHeader][:biSizeImage]
-        size_image = buf_size + 16 if size_image == 0
+        file_size = buf_size + BITMAP_FILE_HEADER_SIZE
 
         # Calculate the header size
         case bmi[:bmiHeader][:biBitCount]
@@ -369,10 +376,14 @@ module Win32
           when 8
             table_size = 256
           when 16, 32
-            if bmi[:bmiHeader][:biCompression] == 0
+            if bmi[:bmiHeader][:biCompression] == BI_RGB
               table_size = bmi[:bmiHeader][:biClrUsed]
-            elsif compression == 3
-              table_size = 3
+            elsif bmi[:bmiHeader][:biCompression] == BI_BITFIELDS
+              table_size = bmi[:bmiHeader][:biClrUsed]
+              if bmi[:bmiHeader][:biSize] == BITMAP_INFO_HEADER_SIZE
+                # Add bit fields size
+                table_size += 3
+              end
             else
               raise "invalid bit/compression combination"
             end
@@ -382,10 +393,12 @@ module Win32
             raise "invalid bit count"
         end # case
 
-        # TODO: Document what's happening here.
-        offset = 0x36 + (table_size * 4)
+        # offset = sizeof(BITMAPFILEHEADER)
+        #          + sizeof(BITMAPINFOHEADER or BITMAPV4HEADER or BITMAPV5HEADER)
+        #          + (color table size)
+        offset = BITMAP_FILE_HEADER_SIZE + bmi[:bmiHeader][:biSize] + (table_size * 4)
 
-        buf = "\x42\x4D" + [size_image].pack('L') + 0.chr * 4 + [offset].pack('L') + ptr.read_bytes(buf_size)
+        buf = "\x42\x4D" + [file_size].pack('L') + 0.chr * 4 + [offset].pack('L') + ptr.read_bytes(buf_size)
       ensure
         GlobalUnlock(handle) if handle
       end

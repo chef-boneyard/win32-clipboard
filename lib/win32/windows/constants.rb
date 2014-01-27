@@ -6,5 +6,7 @@ module Windows
     GWL_USERDATA = -21
     GWL_WNDPROC  = -4
     CF_TEXT = 1
+    BI_RGB = 0
+    BI_BITFIELDS = 3
   end
 end
