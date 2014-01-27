@@ -1,3 +1,7 @@
+== 0.6.2 - 27-Jan-2014
+* Fix and more tests for the internal get_image_data. Thanks go to u338steven
+  for the spot and patches.
+
 == 0.6.1 - 20-Jan-2014
 * Use 32-bit versions of GetWindowLong and SetWindowLong functions on 32-bit
   versions of Ruby. Thanks go to Orgad Shaneh for the spot.
