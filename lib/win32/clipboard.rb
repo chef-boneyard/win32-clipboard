@@ -44,9 +44,7 @@ module Win32
     def self.empty
       begin
         open
-        unless EmptyClipboard()
-          raise SystemCallError.new('EmptyClipboard', FFI.errno)
-        end
+        clear_if_already_opened
       ensure
         close
       end
@@ -147,8 +145,8 @@ module Win32
     #
     def self.set_data(clip_data, format = TEXT)
       begin
-        clear
         open
+        clear_if_already_opened
 
         # NULL terminate text or strip header of bitmap file
         case format
@@ -342,6 +340,14 @@ module Win32
     def self.close
       unless CloseClipboard()
         raise SystemCallError.new('CloseClipboard', FFI.errno)
+      end
+    end
+
+    # Clear the clipboard that is already opened
+    #
+    def self.clear_if_already_opened
+      unless EmptyClipboard()
+        raise SystemCallError.new('EmptyClipboard', FFI.errno)
       end
     end
 
