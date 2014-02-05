@@ -270,6 +270,11 @@ module Win32
 
       wnd_proc = FFI::Function.new(:uintptr_t, [:uintptr_t, :uint, :uintptr_t, :uintptr_t]) do |hwnd, umsg, wparam, lparam|
         case umsg
+           when WM_DESTROY
+             next_viewer = GetWindowLongPtr(hwnd, GWL_USERDATA)
+             ChangeClipboardChain(hwnd, next_viewer)
+             PostQuitMessage(0)
+             rv = 0
            when WM_DRAWCLIPBOARD
              yield unless @first_notify
              next_viewer = GetWindowLongPtr(hwnd, GWL_USERDATA)
@@ -278,8 +283,9 @@ module Win32
              end
              rv = 0
            when WM_CHANGECBCHAIN
-             yield unless @first_notify
+             next_viewer = GetWindowLongPtr(hwnd, GWL_USERDATA)
              next_viewer = lparam if next_viewer == wparam
+             SetWindowLongPtr(hwnd, GWL_USERDATA, next_viewer)
              if next_viewer != 0
                PostMessage(next_viewer, umsg, wparam, lparam)
              end
@@ -304,6 +310,8 @@ module Win32
       end
 
       SetWindowLongPtr(handle, GWL_USERDATA, next_viewer)
+
+      ObjectSpace.define_finalizer(self, proc{self.close_window(handle)})
 
       msg = FFI::MemoryPointer.new(:char, 100)
 
@@ -426,6 +434,12 @@ module Win32
       }
 
       array
+    end
+
+    # Close a window.(for self.notify_change)
+    #
+    def self.close_window(handle)
+      SendMessage(handle, WM_CLOSE, 0, 0)
     end
   end
 end
