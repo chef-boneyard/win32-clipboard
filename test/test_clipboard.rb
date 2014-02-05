@@ -10,6 +10,7 @@
 ###########################################################################
 require 'test-unit'
 require 'win32/clipboard'
+require 'timeout'
 include Win32
 
 class TC_Win32_ClipBoard < Test::Unit::TestCase
@@ -141,6 +142,26 @@ class TC_Win32_ClipBoard < Test::Unit::TestCase
 
   test "notify_change basic functionality" do
     assert_respond_to(Clipboard, :notify_change)
+    def wait(&block)
+      Timeout::timeout(5) do
+        while @count == 0
+          yield if block
+          sleep(0.1)
+        end
+      end
+    end
+
+    @count = 0
+    t = Thread.start do
+      Clipboard.notify_change {@count += 1}
+    end
+    wait {Clipboard.set_data('ready')}
+    @count = 0
+
+    Clipboard.set_data('foo')
+    wait
+    assert_equal(@count, 1)
+    t.kill
   end
 
   test "expected constants are defined" do
