@@ -24,6 +24,7 @@ module Windows
 
     ffi_lib :user32
 
+    attach_function :ChangeClipboardChain, [:hwnd, :hwnd], :bool
     attach_function :CloseClipboard, [], :bool
     attach_function :CountClipboardFormats, [], :int
     attach_function :CreateWindowEx, :CreateWindowExA, [:dword, :string, :string, :dword, :int, :int, :int, :int, :hwnd, :hmenu, :hinstance, :pointer], :hwnd
@@ -37,9 +38,11 @@ module Windows
     attach_function :OpenClipboard, [:hwnd], :bool
     attach_function :PeekMessage, :PeekMessageA, [:pointer, :hwnd, :uint, :uint, :uint], :bool
     attach_function :PostMessage, :PostMessageA, [:hwnd, :uint, :uintptr_t, :uintptr_t], :bool
+    attach_function :PostQuitMessage, :PostQuitMessage, [:uint], :void
     attach_function :RegisterClipboardFormat, :RegisterClipboardFormatA, [:string], :uint
     attach_function :SetClipboardData, [:uint, :handle], :handle
     attach_function :SetClipboardViewer, [:hwnd], :hwnd
+    attach_function :SendMessage, :SendMessageA, [:hwnd, :uint, :uintptr_t, :uintptr_t], :bool
     attach_function :TranslateMessage, [:pointer], :bool
 
     # Use Long on 32-bit Ruby, LongPtr on 64-bit Ruby

@@ -51,6 +51,12 @@ namespace :test do
     t.verbose = true
     t.test_files = FileList['test/test_image_clipboard.rb']
   end
+
+  Rake::TestTask.new(:chain) do |t|
+    t.warning = true
+    t.verbose = true
+    t.test_files = FileList['test/test_clipboard_chain.rb']
+  end
 end
 
 task :default => 'test:all'
