@@ -66,7 +66,8 @@ class TC_Clipboard_Chain < Test::Unit::TestCase
     NOTIFY_TIMEOUT = 20
     def initialize(key)
       @key = key
-      @pipe = IO.popen("#{RbConfig.ruby} #{File.join(File.dirname(__FILE__), "notify.rb")} #{key} #{NOTIFY_TIMEOUT}")
+      load_path = File.join(File.join(File.dirname(__FILE__), '..'), 'lib')
+      @pipe = IO.popen("#{RbConfig.ruby} -I #{load_path} #{File.join(File.dirname(__FILE__), "notify.rb")} #{key} #{NOTIFY_TIMEOUT}")
       @result = nil
       is_ready = false
 
