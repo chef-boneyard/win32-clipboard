@@ -3,6 +3,8 @@ require File.join(File.dirname(__FILE__), 'lock')
 
 include Win32
 
+timeout = ARGV[1].to_i
+
 def write
   data = ''
   lock do
@@ -20,5 +22,6 @@ def write
   end
 end
 
-Clipboard.notify_change {write}
-
+Timeout::timeout(timeout) do
+  Clipboard.notify_change {write}
+end
