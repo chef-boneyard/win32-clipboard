@@ -56,16 +56,17 @@ class TC_Clipboard_Chain < Test::Unit::TestCase
       assert_equal(result, cv1.result)
       assert_not_nil(cv1.remove)
     ensure
-      cv1.remove
-      cv2.remove
-      cv3.remove
+      cv1.exit
+      cv2.exit
+      cv3.exit
     end
   end
 
   class ClipboardViewer
+    NOTIFY_TIMEOUT = 20
     def initialize(key)
       @key = key
-      @pipe = IO.popen("#{RbConfig.ruby} #{File.join(File.dirname(__FILE__), "notify.rb")} #{key}")
+      @pipe = IO.popen("#{RbConfig.ruby} #{File.join(File.dirname(__FILE__), "notify.rb")} #{key} #{NOTIFY_TIMEOUT}")
       @result = nil
       is_ready = false
 
@@ -90,11 +91,13 @@ class TC_Clipboard_Chain < Test::Unit::TestCase
         end
       end
 
-      until is_ready
-        lock do
-          Clipboard.set_data('ready')
+      Timeout::timeout(5) do
+        until is_ready
+          lock do
+            Clipboard.set_data('ready')
+          end
+          sleep(0.1)
         end
-        sleep(0.1)
       end
     end
 
@@ -123,6 +126,11 @@ class TC_Clipboard_Chain < Test::Unit::TestCase
         @pipe.close
       end
       ret
+    end
+
+    def exit
+      return unless @t.alive?
+      Process.kill('KILL', @pipe.pid)
     end
   end
 end

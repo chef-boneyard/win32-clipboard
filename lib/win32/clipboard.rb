@@ -266,6 +266,16 @@ module Win32
       name   = 'ruby-clipboard-' + Time.now.to_s
       handle = CreateWindowEx(0, 'static', name, 0, 0, 0, 0, 0, 0, 0, 0, nil)
 
+      next_viewer = SetClipboardViewer(handle)
+
+      if next_viewer.nil?
+        raise SystemCallError.new('SetClipboardViewer', FFI.errno)
+      end
+
+      SetWindowLongPtr(handle, GWL_USERDATA, next_viewer)
+
+      ObjectSpace.define_finalizer(self, proc{self.close_window(handle)})
+
       @first_notify = true
 
       wnd_proc = FFI::Function.new(:uintptr_t, [:uintptr_t, :uint, :uintptr_t, :uintptr_t]) do |hwnd, umsg, wparam, lparam|
@@ -302,16 +312,6 @@ module Win32
       if SetWindowLongPtr(handle, GWL_WNDPROC, wnd_proc.address) == 0
         raise SystemCallError.new('SetWindowLongPtr', FFI.errno)
       end
-
-      next_viewer = SetClipboardViewer(handle)
-
-      if next_viewer.nil?
-        raise SystemCallError.new('SetClipboardViewer', FFI.errno)
-      end
-
-      SetWindowLongPtr(handle, GWL_USERDATA, next_viewer)
-
-      ObjectSpace.define_finalizer(self, proc{self.close_window(handle)})
 
       msg = FFI::MemoryPointer.new(:char, 100)
 
