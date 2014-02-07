@@ -1,3 +1,9 @@
+== 0.6.3 - 7-Feb-2014
+* Fixed a potential duplication notification issue in the notify_change method.
+  Thanks go to u338steven for the spot and patch.
+* Fixed a clipboard chaining issue in the notify_change method when there are
+  multiple clipboard instances. Thanks again go to u338steven.
+
 == 0.6.2 - 27-Jan-2014
 * Fix and more tests for the internal get_image_data. Thanks go to u338steven
   for the spot and patches.
