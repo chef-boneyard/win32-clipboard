@@ -10,7 +10,7 @@
    include Win32
     
    puts "Data on clipboard: " + Clipboard.data
-   puts "Number of available formats: " + Clipboard.num_formats
+   puts "Number of available formats: " + Clipboard.num_formats.to_s
     
    puts "Setting data to 'foobar'"
    Clipboard.set_data("foobar")
