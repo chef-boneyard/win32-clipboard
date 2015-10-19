@@ -1,5 +1,5 @@
 == Description
-   win32-clipboard - a Ruby library for interacting with the Win32 clipboard.
+   win32-clipboard - a Ruby library for interacting with the MS Windows clipboard.
 
 == Installation
    gem install win32-clipboard
@@ -23,13 +23,13 @@
 Clipboard.data(format=nil)
    Returns the data currently in the clipboard.  If +format+ is
    specified, it will attempt to retrieve the data in that format. The
-   default is Clipboard::TEXT.  See the 'Constants' section for
+   default is Clipboard::TEXT. See the 'Constants' section for
    the supported formats.
    
    If there is no data in the clipboard, then an empty string is returned.
     
    Note that this method does implicit conversions on formats with regards
-   to text data.  See the MSDN documentation for more details.
+   to text data. See the MSDN documentation for more details.
     
 Clipboard.empty
    Empty the contents of the clipboard
@@ -71,11 +71,6 @@ Clipboard.set_data(data, format=nil)
     
    See the 'Constants' section for a list of the supported formats.
 
-== Error Classes
-Clipboard::Error
-   Typically only raised if the clipboard fails to open or if you attempt to
-   register an invalid format.
-    
 == Constants
 === Standard Constants
 VERSION
@@ -100,10 +95,10 @@ Clipboard::UNICODETEXT
    Add more formatting option contants and related methods.
     
 == License
-   Ruby's
+   Artistic 2.0
     
 == Copyright
-   (C) 2003-2014 Daniel J. Berger
+   (C) 2003-2015 Daniel J. Berger
    All Rights Reserved
     
 == Authors
