@@ -1,3 +1,10 @@
+== 0.6.4 -19-Oct-2015
+* This gem is now signed, and the gem:create task now signs the gem.
+* Gem related tasks in the Rakefile now assume Rubygems 2.x.
+* Updated the gemspec to include cert info and remove rubyforge_project info.
+* Added a win32-clipboard.rb file for convenience.
+* Use require_relative where appropriate.
+
 == 0.6.3 - 7-Feb-2014
 * Fixed a potential duplication notification issue in the notify_change method.
   Thanks go to u338steven for the spot and patch.
