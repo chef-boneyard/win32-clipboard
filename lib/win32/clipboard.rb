@@ -1,6 +1,6 @@
-require File.join(File.dirname(__FILE__), 'windows', 'constants')
-require File.join(File.dirname(__FILE__), 'windows', 'structs')
-require File.join(File.dirname(__FILE__), 'windows', 'functions')
+require_relative 'windows/constants'
+require_relative 'windows/structs'
+require_relative 'windows/functions'
 
 # The Win32 module serves as a namespace only.
 module Win32
@@ -15,8 +15,8 @@ module Win32
     extend Windows::Functions
     extend Windows::Structs
 
-    # The version of this library
-    VERSION = '0.6.3'
+    # The version of the win32-clipboard library.
+    VERSION = '0.6.4'
 
     # Clipboard formats
 

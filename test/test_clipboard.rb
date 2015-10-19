@@ -15,7 +15,7 @@ include Win32
 
 class TC_Win32_ClipBoard < Test::Unit::TestCase
   test "version is set to expected value" do
-    assert_equal('0.6.3', Clipboard::VERSION)
+    assert_equal('0.6.4', Clipboard::VERSION)
   end
 
   test "data method basic functionality" do
