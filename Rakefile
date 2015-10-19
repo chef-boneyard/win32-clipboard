@@ -7,19 +7,16 @@ CLEAN.include('**/*.gem', '**/*.rbc')
 namespace :gem do
   desc "Create the win32-clipboard gem"
   task :create => [:clean] do
+    require 'rubygems/package'
     spec = eval(IO.read('win32-clipboard.gemspec'))
-    if Gem::VERSION.to_f < 2.0
-      Gem::Builder.new(spec).build
-    else
-      require 'rubygems/package'
-      Gem::Package.build(spec)
-    end
+    spec.signing_key = File.join(Dir.home, '.ssh', 'gem-private_key.pem')
+    Gem::Package.build(spec)
   end
 
   desc "Install the win32-clipboard library"
   task :install => [:create] do
     file = Dir["*.gem"].first
-    sh "gem install #{file}"
+    sh "gem install -l #{file}"
   end
 end
 
